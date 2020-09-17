@@ -1,4 +1,4 @@
-module teamcity10
+module github.com/mike-webster/teamcity10
 
 go 1.14
 
