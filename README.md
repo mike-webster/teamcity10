@@ -22,6 +22,8 @@ To make sure you are passing the values correctly, you can run the following com
 TC_BASE={builds.example.com} TC_CREDS={testcreds} TEST_ID={testid} go test . -run TestSetup
 ```
 
+For the value of `TEST_ID` you'll need to include the teamcity ID for a project that you can build as a test.
+
 ## Contributing
 - If you'd like a feature, create an an issue and assign it to @mike-webster for approval.
     - PRs are accepted, but please don't start working on something without approval.

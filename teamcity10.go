@@ -35,6 +35,62 @@ func GetToken(ctx context.Context) (string, error) {
 	return tok, nil
 }
 
+// TriggerBuild will add a build to the build queue
+// It will return true if it was able to add the build to the queue and false if not.
+func TriggerBuild(ctx context.Context, buildID, branchName, projectID string) (bool, error) {
+	path := "app/rest/buildQueue"
+	body := struct {
+		Name string `json:"branchName"`
+		Type struct {
+			ID  string `json:"id"`
+			PID string `json:"projectId"`
+		} `json:"buildType"`
+	}{
+		Name: branchName,
+		Type: struct {
+			ID  string `json:"id"`
+			PID string `json:"projectId"`
+		}{
+			ID:  buildID,
+			PID: projectID,
+		},
+	}
+	bytes, err := json.Marshal(body)
+	if err != nil {
+		return false, err
+	}
+
+	resp, err := makeRequest(ctx, "POST", path, bytes)
+	if err != nil {
+		return false, err
+	}
+
+	defer resp.Body.Close()
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return false, errors.New(fmt.Sprint("error reading response body; ", err.Error()))
+	}
+
+	if resp.StatusCode > 299 {
+		return false, errors.New(fmt.Sprint("non-200: ", resp.StatusCode, ";\n", string(b)))
+	}
+
+	respStruct := struct {
+		ID int32 `json:"id"`
+	}{}
+
+	err = json.Unmarshal(b, &respStruct)
+	if err != nil {
+		return false, err
+	}
+
+	if respStruct.ID > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
 // GetBuilds retrieves some information about the recent builds for a given project id.
 // This method expects either a teamcity token or teamcity credentials to be in the context
 func GetBuilds(ctx context.Context, id string) (*[]Build, error) {
@@ -73,6 +129,7 @@ func buildRequest(method, url string, body []byte) (*http.Request, error) {
 	}
 
 	req.Header.Add("Accept", "Application/json")
+	req.Header.Add("Content-Type", "Application/json")
 
 	return req, nil
 }

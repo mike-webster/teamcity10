@@ -44,3 +44,14 @@ func TestSetup(t *testing.T) {
 		})
 	})
 }
+
+func TestTriggerBuild(t *testing.T) {
+	ctx := context.WithValue(context.Background(), TeamCityCreds, os.Getenv("TC_CREDS"))
+	ctx = context.WithValue(ctx, TeamCityBaseURL, os.Getenv("TC_BASE"))
+
+	t.Run("Success", func(t *testing.T) {
+		resp, err := TriggerBuild(ctx, os.Getenv("TEST_ID"), "master", os.Getenv("TEST_PROJ"))
+		assert.Equal(t, nil, err)
+		assert.Equal(t, resp, true)
+	})
+}
